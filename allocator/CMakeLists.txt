@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.16)
+project(jzAllocator)
+set (CMAKE_CXX_STANDARD 17)
+include(../cmake/utils.cmake)
+add_standard_module(${PROJECT_NAME} ON)
