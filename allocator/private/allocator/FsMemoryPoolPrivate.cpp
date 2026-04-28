@@ -3,7 +3,6 @@
 // using namespace jz;
 FsMemoryPoolPrivate::FsMemoryPoolPrivate(jz::FsMemoryPool* q) : q_ptr(q)
 {
-    adjustBlockSize();
 }
 
 FsMemoryPoolPrivate::~FsMemoryPoolPrivate()
@@ -20,11 +19,10 @@ void FsMemoryPoolPrivate::expand()
     const auto page = static_cast<char*>(::operator new[](pageBytes));
     pages.push_back(page);
 
-    for (std::size_t i = 0; i < blockSize; i++)
+    for (std::size_t i = 0; i < blockCountPerPage; i++)
     {
-        char* addr = page + i + blockSize;
+        char* addr = page + i * blockSize;
         const auto node = reinterpret_cast<Node*>(addr);
-        // LInsert
         node->next = freeList;
         freeList = node;
     }

@@ -8,11 +8,12 @@ namespace jz
     {
         d->blockCountPerPage = blockSizePerPage;
         d->blockSize = size;
+        d->adjustBlockSize();
     }
 
-    FsMemoryPool::~FsMemoryPool()
-    {
-    }
+    FsMemoryPool::~FsMemoryPool() = default;
+    FsMemoryPool::FsMemoryPool(FsMemoryPool&&) noexcept = default;
+    FsMemoryPool& FsMemoryPool::operator=(FsMemoryPool&&) noexcept = default;
 
     void* FsMemoryPool::allocate()
     {

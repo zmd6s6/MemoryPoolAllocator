@@ -1,13 +1,20 @@
 #ifndef JZMEMORYPOOLALLOCATOR_FSMEMORYPOOL_H
 #define JZMEMORYPOOLALLOCATOR_FSMEMORYPOOL_H
+
 #include <memory>
+
+#ifdef jzAllocator_EXPORTS
+#define JZ_ALLOCATOR_API __declspec(dllexport)
+#else
+#define JZ_ALLOCATOR_API __declspec(dllimport)
+#endif
 
 class FsMemoryPoolPrivate;
 
 namespace jz
 {
 
-    class FsMemoryPool
+    class JZ_ALLOCATOR_API FsMemoryPool
     {
         std::unique_ptr<FsMemoryPoolPrivate> d;
         friend class FsMemoryPoolPrivate;
@@ -15,6 +22,8 @@ namespace jz
     public:
         explicit FsMemoryPool(std::size_t size,std::size_t blockSizePerPage = 1024);
         ~FsMemoryPool();
+        FsMemoryPool(FsMemoryPool&&) noexcept;
+        FsMemoryPool& operator=(FsMemoryPool&&) noexcept;
         void* allocate();
         void deallocate(void* p);
         [[nodiscard]] std::size_t blockSize() const;
