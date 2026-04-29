@@ -2,12 +2,7 @@
 #define JZMEMORYPOOLALLOCATOR_FSMEMORYPOOL_H
 
 #include <memory>
-
-#ifdef jzAllocator_EXPORTS
-#define JZ_ALLOCATOR_API __declspec(dllexport)
-#else
-#define JZ_ALLOCATOR_API __declspec(dllimport)
-#endif
+#include <allocator/EXPORT.h>
 
 class FsMemoryPoolPrivate;
 
