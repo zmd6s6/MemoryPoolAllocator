@@ -3,5 +3,4 @@
 DmMemoryPoolPrivate::DmMemoryPoolPrivate(jz::DmMemoryPool *q) : q_ptr(q) {
 }
 
-DmMemoryPoolPrivate::~DmMemoryPoolPrivate() {
-}
+DmMemoryPoolPrivate::~DmMemoryPoolPrivate() = default;

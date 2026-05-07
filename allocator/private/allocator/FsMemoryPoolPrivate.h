@@ -2,15 +2,12 @@
 #define JZMEMORYPOOLALLOCATOR_FSMEMORYPOOLPRIVATE_H
 
 #include <vector>
+#include <alg/Node.h>
+
 namespace jz
 {
     class FsMemoryPool;
 }
-
-struct  Node
-{
-    Node* next;
-};
 
 class FsMemoryPoolPrivate
 {

@@ -1,3 +1,4 @@
+#include <cmath>
 #include <allocator/DmMemoryPool.h>
 #include <allocator/DmMemoryPoolPrivate.h>
 
@@ -11,6 +12,11 @@ namespace jz {
     }
 
     void *DmMemoryPool::allocate(size_t size) {
+        if (size == 0)
+            return nullptr;
+        if (!d->segment.at(std::log2(size)).freeList) {
+
+        }
         return nullptr;
     }
 
