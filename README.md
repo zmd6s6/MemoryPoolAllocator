@@ -5,10 +5,11 @@
 ## 特性
 
 - **固定块大小** —— 每个 block 大小在构造时指定，分配时返回固定大小的内存块
-- **自动扩容** —— 按页（Page）为单位自动申请新内存，页内所有 block 被拆解加入空闲链表
+- **自动扩容** —— 按页为单位自动申请新内存，页内所有 block 被拆解加入空闲链表
 - **自动对齐** —— block 大小自动向上对齐到指针边界（`alignof(void*)`）
-- **内存复用** —— `deallocate` 归还的 block 会进入空闲链表，后续 `allocate` 优先复用
+- **内存复用** —— `deallocate` 归还的 block 进入空闲链表，后续 `allocate` 优先复用
 - **移动语义** —— 支持移动构造和移动赋值
+- **Grow-only** —— 池是 **只增不缩** 的，一旦分配的页不会释放回系统直到池析构。
 
 ## API
 
@@ -44,11 +45,11 @@ public:
 | 方法 | 说明 |
 |---|---|
 | `FsMemoryPool(size)` | 固定块大小内存池，`blockSize` 为每个 block 字节数 |
-| `FsMemoryPool::allocate()` | 分配一个 block，返回非空指针；自动扩容 |
-| `FsMemoryPool::deallocate(p)` | 归还 block 到空闲链表；传入 `nullptr` 安全 |
+| `FsMemoryPool::allocate()` | 分配一个 block，自动扩容，不会失败 |
+| `FsMemoryPool::deallocate(p)` | 归还 block；传入 `nullptr` 安全 |
 | `FsMemoryPool::blockSize()` | 返回对齐后的 block 大小 |
 | `DmMemoryPool()` | 动态分级内存池，自动管理不同大小的 block |
-| `DmMemoryPool::allocate(size)` | 分配指定大小的 block |
+| `DmMemoryPool::allocate(size)` | 分配指定大小的 block，自动创建对应 size 的 level |
 | `DmMemoryPool::deallocate(p)` | 归还 block |
 
 ## 构建
@@ -117,6 +118,13 @@ MemoryPoolAllocator/
 └── CMakeLists.txt
 ```
 
-## TODO
+## 设计说明
 
-- [ ] **DmMemoryPool** —— 动态分级内存池，支持不同 block 大小的分级管理
+### Grow-only 策略
+
+两个内存池均为 **只增不缩** 设计。分配出去的 block 归还后进入空闲链表复用，但已申请的页（page）不会释放回系统，直到池析构。
+
+**原因：**
+- 分配/释放均为 O(1)，无碎片
+- 适应高频分配场景（如游戏帧循环、消息处理）
+- `freeCount` 计数可用于判断整页空闲，如需可在此基础上实现页回收
