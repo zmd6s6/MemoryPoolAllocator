@@ -1,15 +1,14 @@
 #ifndef SEGMENT_H
 #define SEGMENT_H
 
-#include <vector>
+#include <cstddef>
 #include <alg/Node.h>
 
-
-constexpr auto DEFAULT_PAGE_SIZE = 4096;
-
 struct SegmentContext {
-    size_t blockCount;          
-    std::vector<void *> pages;
-    Node *freeList;
+    size_t blockSize;
+    size_t blockCount;
+    void* page;
+    Node* freeList;
+    size_t freeCount;
 };
 #endif //SEGMENT_H

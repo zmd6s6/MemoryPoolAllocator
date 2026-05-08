@@ -3,10 +3,10 @@
 
 namespace jz
 {
-    FsMemoryPool::FsMemoryPool(std::size_t size, std::size_t blockSizePerPage) : d(
+    FsMemoryPool::FsMemoryPool(std::size_t size) : d(
         std::make_unique<FsMemoryPoolPrivate>(this))
     {
-        d->blockCountPerPage = blockSizePerPage;
+        d->blockCountPerPage = FsMemoryPoolPrivate::kDefaultBlockCount;
         d->blockSize = size;
         d->adjustBlockSize();
     }
@@ -34,6 +34,4 @@ namespace jz
     }
 
     std::size_t FsMemoryPool::blockSize() const { return d->blockSize; }
-
-    std::size_t FsMemoryPool::blockCountPerPage() const { return d->blockCountPerPage; }
 } // jz

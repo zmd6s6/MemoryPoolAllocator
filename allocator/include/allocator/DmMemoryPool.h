@@ -1,6 +1,7 @@
 #ifndef DMMEMORYPOOL_H
 #define DMMEMORYPOOL_H
 #include <memory>
+#include <cstddef>
 #include <allocator/EXPORT.h>
 
 class DmMemoryPoolPrivate;

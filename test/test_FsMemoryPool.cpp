@@ -17,14 +17,6 @@ TEST_F(FsMemoryPoolTest, Construction)
 {
     jz::FsMemoryPool pool(32);
     EXPECT_EQ(pool.blockSize(), 32);
-    EXPECT_EQ(pool.blockCountPerPage(), 1024);
-}
-
-TEST_F(FsMemoryPoolTest, CustomBlockCountPerPage)
-{
-    jz::FsMemoryPool pool(64, 512);
-    EXPECT_EQ(pool.blockSize(), 64);
-    EXPECT_EQ(pool.blockCountPerPage(), 512);
 }
 
 TEST_F(FsMemoryPoolTest, BlockSizeAligned)
@@ -36,14 +28,14 @@ TEST_F(FsMemoryPoolTest, BlockSizeAligned)
 
 TEST_F(FsMemoryPoolTest, AllocateReturnsNonNull)
 {
-    jz::FsMemoryPool pool(64, 10);
+    jz::FsMemoryPool pool(64);
     void* p = pool.allocate();
     EXPECT_NE(p, nullptr);
 }
 
 TEST_F(FsMemoryPoolTest, AllocateReturnsAlignedBlock)
 {
-    jz::FsMemoryPool pool(32, 10);
+    jz::FsMemoryPool pool(32);
     void* p = pool.allocate();
     ASSERT_NE(p, nullptr);
     EXPECT_EQ(reinterpret_cast<std::uintptr_t>(p) % alignof(void*), 0);
@@ -52,7 +44,7 @@ TEST_F(FsMemoryPoolTest, AllocateReturnsAlignedBlock)
 TEST_F(FsMemoryPoolTest, AllocateMultipleBlocks)
 {
     constexpr std::size_t count = 100;
-    jz::FsMemoryPool pool(32, count);
+    jz::FsMemoryPool pool(32);
     std::vector<void*> ptrs;
     for (std::size_t i = 0; i < count; ++i)
     {
@@ -66,21 +58,21 @@ TEST_F(FsMemoryPoolTest, AllocateMultipleBlocks)
 
 TEST_F(FsMemoryPoolTest, AutoExpand)
 {
-    jz::FsMemoryPool pool(32, 5);
+    jz::FsMemoryPool pool(32);
     std::vector<void*> ptrs;
-    for (std::size_t i = 0; i < 20; ++i)
+    for (std::size_t i = 0; i < 200; ++i)
     {
         void* p = pool.allocate();
         ASSERT_NE(p, nullptr);
         ptrs.push_back(p);
     }
     std::set<void*> unique(ptrs.begin(), ptrs.end());
-    EXPECT_EQ(unique.size(), 20);
+    EXPECT_EQ(unique.size(), 200);
 }
 
 TEST_F(FsMemoryPoolTest, AllocateAndDeallocateReuse)
 {
-    jz::FsMemoryPool pool(32, 5);
+    jz::FsMemoryPool pool(32);
     void* p1 = pool.allocate();
     ASSERT_NE(p1, nullptr);
     pool.deallocate(p1);
@@ -90,8 +82,8 @@ TEST_F(FsMemoryPoolTest, AllocateAndDeallocateReuse)
 
 TEST_F(FsMemoryPoolTest, AllocateAllAndReuseAll)
 {
-    constexpr std::size_t count = 10;
-    jz::FsMemoryPool pool(64, count);
+    constexpr std::size_t count = 200;
+    jz::FsMemoryPool pool(64);
     std::vector<void*> ptrs;
     for (std::size_t i = 0; i < count; ++i)
         ptrs.push_back(pool.allocate());
@@ -116,7 +108,7 @@ TEST_F(FsMemoryPoolTest, StressTest)
 {
     constexpr std::size_t iterations = 1000;
     constexpr std::size_t blockSize = 32;
-    jz::FsMemoryPool pool(blockSize, 64);
+    jz::FsMemoryPool pool(blockSize);
     for (std::size_t i = 0; i < iterations; ++i)
     {
         void* p = pool.allocate();
@@ -128,9 +120,9 @@ TEST_F(FsMemoryPoolTest, StressTest)
 
 TEST_F(FsMemoryPoolTest, BlocksDoNotOverlap)
 {
-    constexpr std::size_t count = 50;
+    constexpr std::size_t count = 100;
     constexpr std::size_t blockSize = 16;
-    jz::FsMemoryPool pool(blockSize, count);
+    jz::FsMemoryPool pool(blockSize);
     std::vector<void*> ptrs;
     for (std::size_t i = 0; i < count; ++i)
         ptrs.push_back(pool.allocate());
@@ -150,7 +142,7 @@ TEST_F(FsMemoryPoolTest, WriteToAllocatedBlocks)
 {
     constexpr std::size_t count = 100;
     constexpr std::size_t blockSize = 64;
-    jz::FsMemoryPool pool(blockSize, 16);
+    jz::FsMemoryPool pool(blockSize);
     std::vector<void*> ptrs;
     for (std::size_t i = 0; i < count; ++i)
     {
@@ -169,7 +161,7 @@ TEST_F(FsMemoryPoolTest, WriteToAllocatedBlocks)
 
 TEST_F(FsMemoryPoolTest, MoveConstruct)
 {
-    jz::FsMemoryPool pool(32, 10);
+    jz::FsMemoryPool pool(32);
     void* p1 = pool.allocate();
     ASSERT_NE(p1, nullptr);
     jz::FsMemoryPool moved(std::move(pool));
@@ -180,10 +172,10 @@ TEST_F(FsMemoryPoolTest, MoveConstruct)
 
 TEST_F(FsMemoryPoolTest, MoveAssign)
 {
-    jz::FsMemoryPool pool(32, 10);
+    jz::FsMemoryPool pool(32);
     void* p1 = pool.allocate();
     ASSERT_NE(p1, nullptr);
-    jz::FsMemoryPool other(64, 5);
+    jz::FsMemoryPool other(64);
     other = std::move(pool);
     void* p2 = other.allocate();
     EXPECT_NE(p2, nullptr);
@@ -193,21 +185,9 @@ TEST_F(FsMemoryPoolTest, MoveAssign)
 TEST_F(FsMemoryPoolTest, LargeBlockSize)
 {
     constexpr std::size_t largeSize = 4096;
-    jz::FsMemoryPool pool(largeSize, 4);
+    jz::FsMemoryPool pool(largeSize);
     EXPECT_EQ(pool.blockSize(), largeSize);
     void* p = pool.allocate();
     ASSERT_NE(p, nullptr);
     std::memset(p, 0xFF, largeSize);
-}
-
-TEST_F(FsMemoryPoolTest, SingleBlockPerPage)
-{
-    jz::FsMemoryPool pool(64, 1);
-    void* p1 = pool.allocate();
-    ASSERT_NE(p1, nullptr);
-    void* p2 = pool.allocate();
-    ASSERT_NE(p2, nullptr);
-    EXPECT_NE(p1, p2);
-    pool.deallocate(p1);
-    pool.deallocate(p2);
 }

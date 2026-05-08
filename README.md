@@ -17,8 +17,7 @@ namespace jz {
 
 class FsMemoryPool {
 public:
-    explicit FsMemoryPool(std::size_t blockSize,
-                          std::size_t blockCountPerPage = 1024);
+    explicit FsMemoryPool(std::size_t blockSize);
     ~FsMemoryPool();
 
     FsMemoryPool(FsMemoryPool&&) noexcept;
@@ -28,7 +27,15 @@ public:
     void deallocate(void* p);
 
     std::size_t blockSize() const;
-    std::size_t blockCountPerPage() const;
+};
+
+class DmMemoryPool {
+public:
+    DmMemoryPool();
+    ~DmMemoryPool();
+
+    void* allocate(std::size_t size);
+    void deallocate(void* p);
 };
 
 }
@@ -36,11 +43,13 @@ public:
 
 | 方法 | 说明 |
 |---|---|
-| `FsMemoryPool(size, blockCountPerPage)` | 构造内存池，`blockSize` 为每个 block 字节数，`blockCountPerPage` 为每次扩容的 block 数量 |
-| `allocate()` | 分配一个 block，返回非空指针；自动扩容 |
-| `deallocate(p)` | 归还 block 到空闲链表；传入 `nullptr` 安全 |
-| `blockSize()` | 返回对齐后的 block 大小 |
-| `blockCountPerPage()` | 返回每次扩容的 block 数量 |
+| `FsMemoryPool(size)` | 固定块大小内存池，`blockSize` 为每个 block 字节数 |
+| `FsMemoryPool::allocate()` | 分配一个 block，返回非空指针；自动扩容 |
+| `FsMemoryPool::deallocate(p)` | 归还 block 到空闲链表；传入 `nullptr` 安全 |
+| `FsMemoryPool::blockSize()` | 返回对齐后的 block 大小 |
+| `DmMemoryPool()` | 动态分级内存池，自动管理不同大小的 block |
+| `DmMemoryPool::allocate(size)` | 分配指定大小的 block |
+| `DmMemoryPool::deallocate(p)` | 归还 block |
 
 ## 构建
 
@@ -76,22 +85,33 @@ ctest --test-dir build -C Debug
 - 数据完整性
 - 移动语义
 - 大块分配
-- 单 block 每页
 - 压力测试
+
+**DmMemoryPool：** 12 个测试用例覆盖多级分配、内存复用、数据完整性、压力测试
 
 ## 项目结构
 
 ```
 MemoryPoolAllocator/
 ├── allocator/
-│   ├── include/allocator/FsMemoryPool.h    # 公开头文件
-│   ├── src/FsMemoryPool.cpp                # 公开接口实现
-│   └── private/allocator/                  # 私有实现（d-pointer）
-│       ├── FsMemoryPoolPrivate.h
-│       └── FsMemoryPoolPrivate.cpp
+│   ├── include/allocator/
+│   │   ├── FsMemoryPool.h                  # FsMemoryPool 公开头文件
+│   │   ├── DmMemoryPool.h                  # DmMemoryPool 公开头文件
+│   │   └── EXPORT.h                        # DLL 导出宏
+│   ├── src/
+│   │   ├── FsMemoryPool.cpp
+│   │   └── DmMemoryPool.cpp
+│   └── private/
+│       ├── allocator/                      # 私有实现（d-pointer）
+│       │   ├── FsMemoryPoolPrivate.h/cpp
+│       │   └── DmMemoryPoolPrivate.h/cpp
+│       └── alg/                            # 内部数据结构
+│           ├── Node.h
+│           └── Segment.h
 ├── test/
 │   ├── CMakeLists.txt
-│   └── test_FsMemoryPool.cpp               # 单元测试
+│   ├── test_FsMemoryPool.cpp
+│   └── test_DmMemoryPool.cpp
 ├── third_party/googletest-1.14.0/           # Google Test 源码
 ├── cmake/utils.cmake                        # CMake 辅助宏
 └── CMakeLists.txt

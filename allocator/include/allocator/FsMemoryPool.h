@@ -15,14 +15,13 @@ namespace jz
         friend class FsMemoryPoolPrivate;
 
     public:
-        explicit FsMemoryPool(std::size_t size,std::size_t blockSizePerPage = 1024);
+        explicit FsMemoryPool(std::size_t size);
         ~FsMemoryPool();
         FsMemoryPool(FsMemoryPool&&) noexcept;
         FsMemoryPool& operator=(FsMemoryPool&&) noexcept;
         void* allocate();
         void deallocate(void* p);
         [[nodiscard]] std::size_t blockSize() const;
-        [[nodiscard]] std::size_t blockCountPerPage() const;
     };
 } // jz
 
